@@ -1,4 +1,4 @@
-load 'test_helper/common'
+load "${REPOSITORY_ROOT}/test/test_helper/common"
 
 TEST_NAME_PREFIX='default relay host:'
 CONTAINER_NAME='dms-test-default_relay_host'

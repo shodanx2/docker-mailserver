@@ -1,4 +1,4 @@
-load 'test_helper/common'
+load "${REPOSITORY_ROOT}/test/test_helper/common"
 
 TEST_NAME_PREFIX='Dovecot protocols:'
 CONTAINER_NAME_IPV4='dms-test-dovecot_protocols_ipv4'

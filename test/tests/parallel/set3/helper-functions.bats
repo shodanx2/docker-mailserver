@@ -1,4 +1,4 @@
-load 'test_helper/common'
+load "${REPOSITORY_ROOT}/test/test_helper/common"
 
 IMAGE_NAME=${NAME:-mailserver-testing:ci}
 TEST_NAME_PREFIX='helper functions: '
