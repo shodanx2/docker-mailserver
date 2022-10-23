@@ -1,8 +1,10 @@
-SHELL             := /bin/bash
-.SHELLFLAGS       += -e -u -o pipefail
+SHELL       := /bin/bash
+.SHELLFLAGS += -e -u -o pipefail
 
-export IMAGE_NAME := mailserver-testing:ci
-export NAME       ?= $(IMAGE_NAME)
+PARALLEL_JOBS          ?= 2
+export REPOSITORY_ROOT := $(CURDIR)
+export IMAGE_NAME      ?= mailserver-testing:ci
+export NAME            ?= $(IMAGE_NAME)
 
 # -----------------------------------------------
 # --- Generic Targets ---------------------------
@@ -33,14 +35,23 @@ clean:
 	-@ while read -r LINE; do [[ $${LINE} =~ test/.+ ]] && sudo rm -rf $${LINE}; done < .gitignore
 
 # -----------------------------------------------
-# --- Tests  & Lints ----------------------------
+# --- Tests  ------------------------------------
 # -----------------------------------------------
 
-tests:
-	@ ./test/bats/bin/bats --timing test/*.bats
+tests: tests/serial tests/parallel/set1 tests/parallel/set2 tests/parallel/set3
+
+tests/serial:
+	@ ./test/bats/bin/bats --timing --jobs 1 test/$@/**.bats
+
+tests/parallel/set%:
+	@ ./test/bats/bin/bats --timing --jobs $(PARALLEL_JOBS) test/$@/**.bats
 
 test/%:
-	@ ./test/bats/bin/bats --timing $@.bats
+	@ shopt -s globstar nullglob ; ./test/bats/bin/bats --timing test/tests/**/{$*,}.bats
+
+# -----------------------------------------------
+# --- Lints -------------------------------------
+# -----------------------------------------------
 
 lint: eclint hadolint shellcheck
 
