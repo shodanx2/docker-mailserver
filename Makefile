@@ -41,10 +41,10 @@ clean:
 tests: tests/serial tests/parallel/set1 tests/parallel/set2 tests/parallel/set3
 
 tests/serial:
-	@ ./test/bats/bin/bats --timing --jobs 1 test/$@/**.bats
+	@ shopt -s globstar ; ./test/bats/bin/bats --timing --jobs 1 test/$@/**.bats
 
 tests/parallel/set%:
-	@ ./test/bats/bin/bats --timing --jobs $(PARALLEL_JOBS) test/$@/**.bats
+	@ shopt -s globstar ; ./test/bats/bin/bats --timing --jobs $(PARALLEL_JOBS) test/$@/**.bats
 
 test/%:
 	@ shopt -s globstar nullglob ; ./test/bats/bin/bats --timing test/tests/**/{$*,}.bats
