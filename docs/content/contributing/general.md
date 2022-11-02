@@ -24,6 +24,10 @@ To run the test suite, you will need to
 
     We do not support running linting, tests, etc on macOS at this time. Please use a linux VM.
 
+??? tip "Running a Specific Test"
+
+    If you want to run a specific test, you can use `make build generate-accounts test/<TEST NAME>`, where `<TEST NAME>` can be just the name of the test or the path from `test/test/<PATH>` without the `.bats` suffix. Say you want to run the `template.bats` tests: you can use `make test/template` or `make test/parallel/set2/template`.
+
 [Install Docker]: https://docs.docker.com/get-docker/
 
 ## Documentation
