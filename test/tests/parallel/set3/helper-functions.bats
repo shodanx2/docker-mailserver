@@ -1,4 +1,4 @@
-TEST_NAME_PREFIX='helper functions: '
+TEST_NAME_PREFIX='helper functions inside container:'
 CONTAINER_NAME='dms-test-helper_functions'
 
 load "${REPOSITORY_ROOT}/test/helper/setup"
@@ -11,7 +11,7 @@ function setup_file() {
 
 function teardown_file() { _default_teardown ; }
 
-@test "${TEST_NAME_PREFIX}function _sanitize_ipv4_to_subnet_cidr" {
+@test "${TEST_NAME_PREFIX} _sanitize_ipv4_to_subnet_cidr" {
   _run_in_container bash -c "source /usr/local/bin/helpers/index.sh; _sanitize_ipv4_to_subnet_cidr 255.255.255.255/0"
   assert_output "0.0.0.0/0"
 
