@@ -1,30 +1,23 @@
-load "${REPOSITORY_ROOT}/test/test_helper/common"
-
 TEST_NAME_PREFIX='default relay host:'
 CONTAINER_NAME='dms-test-default_relay_host'
-RUN_COMMAND=('run' 'docker' 'exec' "${CONTAINER_NAME}")
+
+load "${REPOSITORY_ROOT}/test/helper/setup"
+load "${REPOSITORY_ROOT}/test/helper/common"
 
 function setup_file() {
-  local PRIVATE_CONFIG
-  PRIVATE_CONFIG=$(duplicate_config_for_container . "${CONTAINER_NAME}")
+  init_with_defaults
 
-  docker run --rm --detach --tty \
-    --name "${CONTAINER_NAME}" \
-    --hostname mail.my-domain.com \
-    --volume "${PRIVATE_CONFIG}:/tmp/docker-mailserver" \
-    --volume "${PWD}/test/test-files:/tmp/docker-mailserver-test:ro" \
+  local CUSTOM_SETUP_ARGUMENTS=(
     --env DEFAULT_RELAY_HOST=default.relay.host.invalid:25 \
     --env PERMIT_DOCKER=host \
-    "${IMAGE_NAME}"
+  )
 
-    wait_for_finished_setup_in_container "${CONTAINER_NAME}"
+  common_container_setup 'CUSTOM_SETUP_ARGUMENTS'
 }
 
-function teardown_file() {
-  docker rm -f "${CONTAINER_NAME}"
-}
+function teardown_file() { _default_teardown ; }
 
 @test "${TEST_NAME_PREFIX} default relay host is added to main.cf" {
-  "${RUN_COMMAND[@]}" bash -c 'grep -e "^relayhost =" /etc/postfix/main.cf'
+  _run_in_container bash -c 'grep -e "^relayhost =" /etc/postfix/main.cf'
   assert_output 'relayhost = default.relay.host.invalid:25'
 }
