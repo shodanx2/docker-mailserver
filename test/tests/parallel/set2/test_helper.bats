@@ -63,8 +63,6 @@ TEST_NAME_PREFIX='test helper functions:'
   [[ ${SECONDS} -le 1 ]]
   run docker exec "${CONTAINER_NAME}" cat /tmp/marker
   assert_output "${CONTAINER_NAME}"
-
-  docker rm -f "${CONTAINER_NAME}"
 }
 
 @test "${TEST_NAME_PREFIX} container_is_running" {
@@ -83,8 +81,6 @@ TEST_NAME_PREFIX='test helper functions:'
   [[ ${SECONDS} -ge 2 ]]
   assert_failure
   assert_output --partial "Timed out on command"
-
-  docker rm -f "${CONTAINER_NAME}"
 }
 
 # NOTE: Test requires external network access available
@@ -102,30 +98,24 @@ TEST_NAME_PREFIX='test helper functions:'
 }
 
 @test "${TEST_NAME_PREFIX} wait_for_finished_setup_in_container" {
-  # the container name is used here explicitly, because it cannot be a local
-  # variable as the `teardown` function would not have the correct scope
-  # and does not see the variable
-
   # variable not local to make visible to teardown
   local PRIVATE_CONFIG
-  PRIVATE_CONFIG=$(duplicate_config_for_container . dms-test-wait_for_finished_setup)
+  PRIVATE_CONFIG=$(duplicate_config_for_container .)
 
-  docker run -d --rm --name dms-test-wait_for_finished_setup \
+  CONTAINER_NAME=$(docker run -d --rm \
     -v "${PRIVATE_CONFIG}":/tmp/docker-mailserver \
     -h mail.my-domain.com \
-    -t "${IMAGE_NAME}"
+    -t "${NAME}")
 
-  teardown() { docker rm -f dms-test-wait_for_finished_setup; }
+  teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
   # the setup should not be finished immediately after starting
-  ! TEST_TIMEOUT_IN_SECONDS=0 wait_for_finished_setup_in_container dms-test-wait_for_finished_setup
-
-  docker exec dms-test-wait_for_finished_setup setup email add 'example_user@domain.com' 'password'
+  ! TEST_TIMEOUT_IN_SECONDS=0 wait_for_finished_setup_in_container "${CONTAINER_NAME}"
 
   # but it will finish eventually
   SECONDS=1
 
-  wait_for_finished_setup_in_container dms-test-wait_for_finished_setup
+  wait_for_finished_setup_in_container "${CONTAINER_NAME}"
   [[ ${SECONDS} -gt 0 ]]
 }
 
@@ -141,41 +131,29 @@ TEST_NAME_PREFIX='test helper functions:'
 }
 
 @test "${TEST_NAME_PREFIX} container_has_service_running/wait_for_service" {
-  # the container name is used here explicitly, because it cannot be a local
-  # variable as the `teardown` function would not have the correct scope
-  # and does not see the variable
-
   local PRIVATE_CONFIG
-  PRIVATE_CONFIG=$(duplicate_config_for_container . dms-test-services_running)
+  PRIVATE_CONFIG=$(duplicate_config_for_container .)
 
   # variable not local to make visible to teardown
-  docker run -d --rm --name dms-test-services_running \
+  CONTAINER_NAME=$(docker run -d --rm \
     -v "${PRIVATE_CONFIG}":/tmp/docker-mailserver \
     -h mail.my-domain.com \
-    -e ENABLE_CLAMAV=0 \
-    -e ENABLE_AMAVIS=0 \
-    -e ENABLE_FAIL2BAN=0 \
-    -e ENABLE_SPAMASSASIN=0 \
-    -t "${IMAGE_NAME}"
+    -t "${NAME}")
 
-  teardown() { docker rm -f dms-test-services_running; }
-
-  docker exec dms-test-services_running setup email add 'example_user@domain.com' 'password'
-  wait_for_finished_setup_in_container dms-test-services_running
-  wait_for_changes_to_be_detected_in_container dms-test-services_running
+  teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
   # pick a service that was not started
-  ! container_has_service_running dms-test-services_running clamav
+  ! container_has_service_running "${CONTAINER_NAME}" clamav
 
   # wait for a service that should be started
-  wait_for_service dms-test-services_running postfix
+  wait_for_service "${CONTAINER_NAME}" postfix
 
   # shut down the service
-  docker exec dms-test-services_running supervisorctl stop postfix
+  docker exec "${CONTAINER_NAME}" supervisorctl stop postfix
 
   # now it should be off
   SECONDS=0
-  TEST_TIMEOUT_IN_SECONDS=5 run wait_for_service dms-test-services_running postfix
+  TEST_TIMEOUT_IN_SECONDS=5 run wait_for_service "${CONTAINER_NAME}" postfix
   [[ ${SECONDS} -ge 5 ]]
   assert_failure
 }
@@ -188,7 +166,7 @@ TEST_NAME_PREFIX='test helper functions:'
   CONTAINER_NAME=$(docker run -d --rm \
     -v "${PRIVATE_CONFIG}":/tmp/docker-mailserver \
     -h mail.my-domain.com \
-    -t "${IMAGE_NAME}")
+    -t "${NAME}")
 
   teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
@@ -214,7 +192,7 @@ TEST_NAME_PREFIX='test helper functions:'
   CONTAINER_NAME=$(docker run -d --rm \
     -v "${PRIVATE_CONFIG}":/tmp/docker-mailserver \
     -h mail.my-domain.com \
-    -t "${IMAGE_NAME}")
+    -t "${NAME}")
 
   teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
@@ -245,7 +223,7 @@ TEST_NAME_PREFIX='test helper functions:'
     -v "$(pwd)/test/test-files":/tmp/docker-mailserver-test:ro \
     -e ENABLE_CLAMAV=1 \
     -h mail.my-domain.com \
-    -t "${IMAGE_NAME}")
+    -t "${NAME}")
 
   teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
@@ -277,7 +255,7 @@ TEST_NAME_PREFIX='test helper functions:'
     -v "$(pwd)/test/test-files":/tmp/docker-mailserver-test:ro \
     -e ENABLE_CLAMAV=1 \
     -h mail.my-domain.com \
-    -t "${IMAGE_NAME}")
+    -t "${NAME}")
 
   teardown() { docker rm -f "${CONTAINER_NAME}"; }
 
