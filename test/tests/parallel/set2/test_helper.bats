@@ -84,7 +84,7 @@ TEST_NAME_PREFIX='test helper functions:'
   assert_failure
   assert_output --partial "Timed out on command"
 
-  docker rm -f "${CONTAINER_NAME}"container_has_service_running/wait_for_service
+  docker rm -f "${CONTAINER_NAME}"
 }
 
 # NOTE: Test requires external network access available
