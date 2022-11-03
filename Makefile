@@ -6,6 +6,8 @@ export REPOSITORY_ROOT := $(CURDIR)
 export IMAGE_NAME      ?= mailserver-testing:ci
 export NAME            ?= $(IMAGE_NAME)
 
+.PHONY: ALWAYS_RUN
+
 # -----------------------------------------------
 # --- Generic Targets ---------------------------
 # -----------------------------------------------
@@ -19,7 +21,7 @@ build:
 		--build-arg VCS_REVISION=$(shell cat VERSION) \
 		.
 
-generate-accounts:
+generate-accounts: ALWAYS_RUN
 	@ cp test/config/templates/postfix-accounts.cf test/config/postfix-accounts.cf
 	@ cp test/config/templates/dovecot-masters.cf test/config/dovecot-masters.cf
 
@@ -38,15 +40,19 @@ clean:
 # --- Tests  ------------------------------------
 # -----------------------------------------------
 
-tests: tests/serial tests/parallel/set1 tests/parallel/set2 tests/parallel/set3
+tests: ALWAYS_RUN
+	@ $(MAKE) generate-accounts tests/serial
+	@ $(MAKE) generate-accounts tests/parallel/set1
+	@ $(MAKE) generate-accounts tests/parallel/set2
+	@ $(MAKE) generate-accounts tests/parallel/set3
 
-tests/serial:
+tests/serial: ALWAYS_RUN
 	@ shopt -s globstar ; ./test/bats/bin/bats --timing --jobs 1 test/$@/**.bats
 
-tests/parallel/set%:
+tests/parallel/set%: ALWAYS_RUN
 	@ shopt -s globstar ; ./test/bats/bin/bats --timing --jobs $(PARALLEL_JOBS) test/$@/**.bats
 
-test/%:
+test/%: ALWAYS_RUN
 	@ shopt -s globstar nullglob ; ./test/bats/bin/bats --timing test/tests/**/{$*,}.bats
 
 # -----------------------------------------------
