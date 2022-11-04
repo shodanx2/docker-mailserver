@@ -237,10 +237,16 @@ With the default settings, SpamAssassin will require 200 mails trained for spam 
 
 ### How can I configure a catch-all?
 
-Considering you want to redirect all incoming e-mails for the domain `example.com` to `user1@example.com`, add the following line to `docker-data/dms/config/postfix-virtual.cf`:
+```
+./setup email add @example.com user1@example.com
+```
 
-```cf
-@example.com user1@example.com
+NOTE : Currently, this redirect will also affect email destined to existing mailboxes
+
+To prevent this, also create an alias to each mailbox
+
+```
+./setup alias add user2@example.com user2@example.com
 ```
 
 ### How can I delete all the emails for a specific user?
