@@ -24,6 +24,10 @@ function setup_file() {
   common_container_setup 'CUSTOM_SETUP_ARGUMENTS'
 }
 
+function teardown_file() {
+  docker rm -f "${CONTAINER_NAME_ALL}" "${CONTAINER_NAME_IPV4}" "${CONTAINER_NAME_IPV6}"
+}
+
 @test "${TEST_NAME_PREFIX} dual-stack IP configuration" {
   run docker exec "${CONTAINER_NAME_ALL}" grep '^#listen = \*, ::' /etc/dovecot/dovecot.conf
   assert_success
@@ -37,12 +41,7 @@ function setup_file() {
 }
 
 @test "${TEST_NAME_PREFIX} IPv6 configuration" {
-  wait_for_finished_setup_in_container 'dms-test-dovecot_protocols_ipv6'
   run docker exec "${CONTAINER_NAME_IPV6}" grep '^listen = \[::\]$' /etc/dovecot/dovecot.conf
   assert_success
   assert_output 'listen = [::]'
-}
-
-function teardown_file {
-  docker rm -f "${CONTAINER_NAME_ALL}" "${CONTAINER_NAME_IPV4}" "${CONTAINER_NAME_IPV6}"
 }
